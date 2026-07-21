@@ -3,7 +3,7 @@
 
 # In[1]:
 
-
+import click
 import pandas as pd
 from sqlalchemy import create_engine
 from tqdm.auto import tqdm
@@ -33,25 +33,23 @@ parse_dates = [
 ]
 
 
-def run():
-
-    pg_user = 'root'
-    pg_password = 'root'
-    pg_host = 'localhost'
-    pg_port = '5432'
-    pg_database = 'ny_taxi'
-
+@click.command()
+@click.option('--pg-user', default='root', help='PostgreSQL user')
+@click.option('--pg-pass', default='root', help='PostgreSQL password')
+@click.option('--pg-host', default='localhost', help='PostgreSQL host')
+@click.option('--pg-port', default=5432, type=int, help='PostgreSQL port')
+@click.option('--pg-db', default='ny_taxi', help='PostgreSQL database name')
+@click.option('--target-table', default='yellow_taxi_data', help='Target table name')
+def run(pg_user, pg_pass, pg_host, pg_port, pg_db, target_table):
     year = 2021
     month = 1
 
     chunksize = 100000
 
-    table_name = 'yellow_taxi_data'
-
     prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
     url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
 
-    engine = create_engine(f'postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_database}')    
+    engine = create_engine(f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}')    
 
     df_iter = pd.read_csv(
         url,
@@ -65,10 +63,10 @@ def run():
     
     for df_chunk in tqdm(df_iter):
         if first:
-            df_chunk.head(0).to_sql(name=table_name, con=engine, if_exists='replace')
+            df_chunk.head(0).to_sql(name=target_table, con=engine, if_exists='replace')
             first = False
 
-        df_chunk.to_sql(name=table_name, con=engine, if_exists='append')
+        df_chunk.to_sql(name=target_table, con=engine, if_exists='append')
 
 if __name__ == '__main__':
     run()
