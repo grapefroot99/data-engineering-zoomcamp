@@ -1,0 +1,34 @@
+docker run -it --rm\
+  --network=pipeline_default \
+  taxi_ingest:v001 \
+    --pg-user=root \
+    --pg-pass=root \
+    --pg-host=pgdatabase \
+    --pg-port=5432 \
+    --pg-db=ny_taxi \
+    --target-table=yellow_taxi_trips
+``` this one runs the configured docker-compose.yaml to run and ingest the data as programmed in ingest_data.py
+
+docker run -it --rm\
+  -e POSTGRES_USER="root" \
+  -e POSTGRES_PASSWORD="root" \
+  -e POSTGRES_DB="ny_taxi" \
+  -v ny_taxi_postgres_data:/var/lib/postgresql \
+  -p 5432:5432 \
+  --network=pg-network \
+  --name pgdatabase \
+  postgres:18
+``` this starts the actual postgre database, it is exposed to port 5432 so that other containers can connect to it thru that
+
+docker run -it --rm\
+  -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+  -e PGADMIN_DEFAULT_PASSWORD="root" \
+  -v pgadmin_data:/var/lib/pgadmin \
+  -p 8085:80 \
+  --network=pg-network \
+  --name pgadmin \
+  dpage/pgadmin4
+``` starts pgadmin ui directly connected to pgdatabase, basically a gui instead of a cli for postgre
+``` pgadmin then exposes itself to 8085 for user interaction
+``` the actual connection between pgadmin and the postgre server happens 
+``` in pgadmin after loggin in and adding the connection through the hostname and port
